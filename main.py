@@ -1,53 +1,54 @@
-import sqlite3
+import json
 import os
 from telegram import Update
 from telegram.ext import ApplicationBuilder, CommandHandler, ContextTypes
 
-# ناوی فایلی داتابەیسەکەت بە وردی بنووسە
-DB_FILE = 'Korek Telecom Sam ple.json'
+JSON_FILE = 'KorekTelecomSample.json'
 
-def search_db(query):
-    if not os.path.exists(DB_FILE):
-        return []
-    conn = sqlite3.connect(DB_FILE)
-    cursor = conn.cursor()
+def search_json(query):
+    if not os.path.exists(JSON_FILE):
+        return None
     
-    # دۆزینەوەی ناوی یەکەم خشتە لە داتابەیسەکەدا
-    cursor.execute("SELECT name FROM sqlite_master WHERE type='table';")
-    tables = cursor.fetchall()
-    if not tables:
-        return []
+    with open(JSON_FILE, 'r', encoding='utf-8') as f:
+        data = json.load(f)
+        
+    results = []
+    query_str = str(query).strip().lower()
     
-    table_name = tables[0][0]
-    
-    # گەڕان لەناو تەواوی خشتەکەدا
-    cursor.execute(f"SELECT * FROM {table_name} WHERE CAST(rowid AS TEXT) LIKE ? OR 1=1 LIMIT 5", ())
-    # تێبینی: بۆ گەڕانی وردتر دەتوانیت دواتر ناوی ستوونەکە ڕاست بکەیتەوە
-    
-    cursor.execute(f"SELECT * FROM {table_name} LIMIT 5")
-    results = cursor.fetchall()
-    conn.close()
+    for item in data:
+        for key, value in item.items():
+            if value and query_str in str(value).lower():
+                results.append(item)
+                break
+        if len(results) >= 5:
+            break
+            
     return results
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text("بەخێربێیت! فەرمانی /search لەگەڵ وشەی گەڕان بنووسە.")
+    await update.message.reply_text("بەخێربێیت! فەرمانی /search لەگەڵ ناوانێک یان ژمارەیەک بنووسە.")
 
 async def search(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_query = " ".join(context.args)
     if not user_query:
-        await update.message.reply_text("تکایە دەقێک یان ژمارەیەک بنووسە بۆ گەڕان.")
+        await update.message.reply_text("تکایە دەقێک یان ژمارەیەک بنووسە.")
         return
-
-    data = search_db(user_query)
-    if data:
+        
+    results = search_json(user_query)
+    
+    if results is None:
+        await update.message.reply_text("فایلی داتابەیسەکە نادۆزرایەوە.")
+    elif results:
         msg = "ئەنجامەکان:\n\n"
-        for row in data:
-            msg += f"{row}\n"
+        for item in results:
+            name = item.get("Subscriber Name", "نەنوسراوە")
+            gsm = item.get("GSM Number", "نەنوسراوە")
+            city = item.get("City", "نەنوسراوە")
+            msg += f"👤 ناو: {name}\n📞 ژمارە: {gsm}\n🏙 شار: {city}\n-------------------\n"
         await update.message.reply_text(msg)
     else:
         await update.message.reply_text("هیچ زانیارییەک نەدۆزرایەوە.")
 
-# توکنەکەی BotFather لێرە دابنێ
 TOKEN = "8010547862:AAEHFUKVaC4pQWCWrfd9bRZ3nroQ8SN8Bt0"
 
 app = ApplicationBuilder().token(TOKEN).build()
@@ -55,4 +56,5 @@ app.add_handler(CommandHandler("start", start))
 app.add_handler(CommandHandler("search", search))
 
 if __name__ == '__main__':
+    print("بۆتەکە چالاک بوو...")
     app.run_polling()
