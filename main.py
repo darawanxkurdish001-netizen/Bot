@@ -4,7 +4,7 @@ from telegram import Update
 from telegram.ext import ApplicationBuilder, CommandHandler, ContextTypes
 
 # ناوی فایلی داتابەیسەکەت بە وردی بنووسە
-DB_FILE = 'sulaymaniyah.db'
+DB_FILE = 'Korek Telecom Sam ple.json'
 
 def search_db(query):
     if not os.path.exists(DB_FILE):
