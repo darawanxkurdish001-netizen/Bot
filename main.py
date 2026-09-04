@@ -48,7 +48,7 @@ async def search(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text("هیچ زانیارییەک نەدۆزرایەوە.")
 
 # توکنەکەی BotFather لێرە دابنێ
-TOKEN = "توکنەکەی_خۆت_لێرە_دابنێ"
+TOKEN = "8437384062:AAF1q-tyLa5XGtV_Y2YPTW_vCiVPIL3nYJI"
 
 app = ApplicationBuilder().token(TOKEN).build()
 app.add_handler(CommandHandler("start", start))
